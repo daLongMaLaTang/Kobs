@@ -13,7 +13,7 @@ class DemoApplicationTests {
 		PasswordEncoder passwordEncoder =new BCryptPasswordEncoder();
 		System.out.println(passwordEncoder.encode("phqh"));
 		System.out.println(passwordEncoder.encode("pbb"));
-		System.out.println(passwordEncoder.encode("pb"));
+		System.out.println(passwordEncoder.encode("phfj"));
 		System.out.println(passwordEncoder.encode("pa"));
 
 

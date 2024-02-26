@@ -9,6 +9,7 @@ export default({
         photo:"",
         token:"",
         is_login:false,
+        pulling_info: true,//是否正在拉去信息
     },
 
     // 如果有需要，可以在这里定义一些获取 state 中数据的计算属性
@@ -26,8 +27,12 @@ export default({
         },
         updateToken(state,token){
             state.token=token;
+        },
+        updatePullingInfo(state,pulling_info){
+            state.pulling_info = pulling_info;
         }
     },
+    
 
     //一般来说，修改state的函数会写在actions里面，这里开始写login的辅助函数用来实现登陆操作
     actions: {
@@ -54,6 +59,7 @@ export default({
                 //resp是后端返回的数据，在登陆impl里面 返回了一个error_message 和token
                 {
                     if(resp.error_message === "success"){
+                    localStorage.setItem("jwt_token",resp.token)
                     context.commit("updateToken",resp.token);
                     
                     data.success(resp);
@@ -92,10 +98,17 @@ export default({
                     data.error(resp);
                 }
 
-            });
+            })
 
+        },
+        logout(context){
+            localStorage.removeItem("jwt_token");
+            context.commit("logout");
         }
     },
+
+
+
     modules: {
     }
   })

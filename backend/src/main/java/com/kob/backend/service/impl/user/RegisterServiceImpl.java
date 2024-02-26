@@ -26,13 +26,17 @@ public class RegisterServiceImpl implements RegisterService {
             map.put("error_message","用户名不能为空");
             return map;
         }
-        if(password == null){
+        if(password == null||confirmedPassword == null){
             map.put("error_message","密码不能为空");
             return map;
         }
         username =username.trim();
         if(username.length() == 0){
             map.put("error_message","用户名不能为空");
+            return map;
+        }
+        if(password.length() == 0||confirmedPassword.length()==0 ){
+            map.put("error_message","密码不能为空");
             return map;
         }
 
@@ -66,7 +70,7 @@ public class RegisterServiceImpl implements RegisterService {
 
         String encodePassword =passwordEncoder.encode(password);
         String photo = "https://profile-avatar.csdnimg.cn/default.jpg!1";
-        User user = new User(null,username,password,photo);
+        User user = new User(null,username,encodePassword,photo);
         userMapper.insert(user);
         map.put("error_message","success");
         return  map;
