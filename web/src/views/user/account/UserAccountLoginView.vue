@@ -38,7 +38,7 @@
             let username = ref('');
             let password = ref('');
             let error_message = ref('');//利用ref取得所输入的值
-            let show_content =ref(false);
+            
 
             const jwt_token =localStorage.getItem("jwt_token");
             if(jwt_token){
