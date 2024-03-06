@@ -3,6 +3,7 @@ package com.kob.backend.consumer;
 import com.alibaba.fastjson.JSONObject;
 import com.kob.backend.consumer.utils.Game;
 import com.kob.backend.consumer.utils.JwtAuthentication;
+import com.kob.backend.mapper.RecordMapper;
 import com.kob.backend.mapper.UserMapper;
 import com.kob.backend.pojo.User;
 import io.jsonwebtoken.io.IOException;
@@ -25,14 +26,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class WebSocketServer {
     private User user;
     //一个全局变量用于存储所有的对战链接，这里用ConcurrentHashMap来保证安全性
-    final  private  static ConcurrentHashMap<Integer,WebSocketServer> users =new ConcurrentHashMap<>();
+    final  public   static ConcurrentHashMap<Integer,WebSocketServer> users =new ConcurrentHashMap<>();
 
     private  Session session =null; //session用于后端向前端发信息
-
-
     private static UserMapper userMapper;
 
-
+    public  static RecordMapper recordMapper;
+    private Game game =null;
 
     final private static CopyOnWriteArraySet<User> matchpool = new CopyOnWriteArraySet<>();//新建立一个匹配池！！！！
 
@@ -45,6 +45,15 @@ public class WebSocketServer {
     public  void setUserMapper(UserMapper userMapper){
         WebSocketServer.userMapper =userMapper;
     }
+
+    @Autowired
+    public void setRecordMapper(RecordMapper recordMapper){
+        WebSocketServer.recordMapper =recordMapper;
+    }
+
+
+
+
     @OnOpen
     public void onOpen(Session session, @PathParam("token") String token) {
         // 建立连接
@@ -78,7 +87,7 @@ public class WebSocketServer {
         // 关闭链接
     }
     private  void startMatching(){//开始匹配
-        System.out.println("start-matching");
+        System.out.println("start-matching !!!!!");
         matchpool.add(this.user);
         while (matchpool.size()>=2){
             Iterator<User> it =matchpool.iterator();//iterator是配对
@@ -87,8 +96,28 @@ public class WebSocketServer {
             matchpool.remove(a);
             matchpool.remove(b);
 
-            Game game = new Game(13,14,20);
+            Game game = new Game(13,14,20,a.getId(),b.getId());
             game.createMap();
+
+            System.out.println("kaishi");
+            game.start();//另起一个线程=> run()
+            System.out.println("kaishichenggong");
+
+            users.get(a.getId()).game =game;
+            users.get(b.getId()).game =game;//启动该线程后要将a，b的信息返回
+
+
+            JSONObject respGame = new JSONObject();
+            respGame.put("a_id",game.getPlayerA().getId());
+            respGame.put("a_sx",game.getPlayerA().getSx());
+            respGame.put("a_sy",game.getPlayerA().getSy());
+
+            respGame.put("b_id",game.getPlayerB().getId());
+            respGame.put("b_sx",game.getPlayerB().getSx());
+            respGame.put("b_sy",game.getPlayerB().getSy());
+            respGame.put("map",game.getG());
+
+
 
 
             //匹配成功需要给用户ab返回信息
@@ -96,14 +125,14 @@ public class WebSocketServer {
             respA.put("event","start-matching");
             respA.put("opponent_username",b.getUsername());
             respA.put("opponent_photo",b.getPhoto());
-            respA.put("gamemap",game.getG());
+            respA.put("game",respGame);// a 获取ditu以及下一步
             users.get(a.getId()).sendMessage(respA.toJSONString());//获取a的链接,然后以a的链接向前端a发respA
 
             JSONObject respB =new JSONObject();//这里要返回信息到前端
             respB.put("event","start-matching");
             respB.put("opponent_username",a.getUsername());
             respB.put("opponent_photo",a.getPhoto());
-            respB.put("gamemap",game.getG());
+            respB.put("game",respGame);
             users.get(b.getId()).sendMessage(respB.toJSONString());//获取a的链接,然后以a的链接向前端a发respA
         }
     }
@@ -112,6 +141,15 @@ public class WebSocketServer {
         matchpool.remove(this.user);
     }
 
+
+    private void move(int direction){
+        if(game.getPlayerA().getId().equals(user.getId())){
+            game.setNextStepA(direction);
+        } else if (game.getPlayerB().getId().equals(user.getId())) {
+            game.setNextStepB(direction);
+        }
+
+    }
     @OnMessage
     public void onMessage(String message, Session session) {
         // 前端向后短发信息，会触发onMessage,用来接受请求来自前端发送的信息 即event
@@ -123,11 +161,11 @@ public class WebSocketServer {
             startMatching();
         } else if ("stop-matching".equals(event)) {
             stopMatching();
+        } else if ("move".equals(event)) {
+            move(data.getInteger("direction"));
+
         }
     }
-
-
-
     public void sendMessage(String message){
         //后端向前端发信息
         synchronized (this.session){

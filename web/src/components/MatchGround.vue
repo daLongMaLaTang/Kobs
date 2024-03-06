@@ -44,6 +44,7 @@ import { useStore } from 'vuex';
                 match_btn_info.value = "取消";
                 store.state.pk.socket.send(JSON.stringify({
                     event:"start-matching",
+                    // bot_id:select_bot.value,
                 }));
 
             }
