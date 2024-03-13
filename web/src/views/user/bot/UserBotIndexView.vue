@@ -37,6 +37,13 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="add-bot-code" class="form-label">代码</label>
+                                             <VAceEditor
+                                                    v-model:value ="botadd.content"
+                                                    @init = 'editorInit'
+                                                    lang = "c_cpp"
+                                                    theme = "textmate"
+                                                    style="height:  300px;" />
+                                           
 
                                         </div>
                                     </form>
@@ -79,15 +86,22 @@
                                                 <div class="modal-body">
                                                     <form>
                                                         <div class="mb-3">
-                                                            <label for="add_bot-title" class="form-label">名称</label>
-                                                            <input v-model="bot.title" type="text" class="form-control" id="add_bot-title" placeholder="请输入Bot名称">
+                                                            <label for="add-bot-title" class="form-label">名称</label>
+                                                            <input v-model="botadd.title" type="text" class="form-control" id="add_bot-title" placeholder="请输入Bot名称">
                                                         </div>
                                                         <div class="mb-3">
                                                             <label for="add-bot-description" class="form-label">简介</label>
-                                                            <textarea v-model="bot.description" class="form-control" id="add-bot-description" rows="3" placeholder="请输入Bot简介"></textarea>
+                                                            <textarea v-model="botadd.description" class="form-control" id="add-bot-description" rows="3" placeholder="请输入Bot简介"></textarea>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label for="add-bot-code" class="form-label">代码</label>
+                                                              <VAceEditor
+                                                                    v-model:value ="bot.content"
+                                                                    @init = 'editorInit'
+                                                                    lang = "c_cpp"
+                                                                    theme = "textmate"
+                                                                    style="height:  300px;" />
+                                                                                                                                
 
                                                         </div>
                                                     </form>
@@ -117,11 +131,23 @@ import { ref,reactive } from 'vue'
 import $ from 'jquery'
 import { useStore } from 'vuex';
 import { Modal } from 'bootstrap/dist/js/bootstrap';
+import { VAceEditor } from 'vue3-ace-editor';
+import ace from 'ace-builds';
+
 
 
 export default{
-
+    components:{
+        VAceEditor
+    },
+    
+   
+    
     setup(){
+         ace.config.set(
+            "basePath",
+            "https://cdn.jsdeliver.net/npm/ace-builds@" + require('ace-builds').version+'/src-noconflict/')
+      
 
         const store =useStore();
         let bots = ref([]);
@@ -227,6 +253,7 @@ export default{
         }
     }
 }
+
 </script>
 
 <style scoped>
